@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Transactions | Personal Expense Tracker{% endblock %}
+{% block page_heading %}Your transactions{% endblock %}
+{% block content %}
+<section class="panel">
+    <div class="panel-heading"><div><span class="section-kicker">LEDGER</span><h3>All transactions</h3></div><span class="transaction-count">{{ transactions|length }} result{{ '' if transactions|length == 1 else 's' }}</span></div>
+    <form class="filter-bar" method="get">
+        <div class="search-box"><i class="bi bi-search"></i><input type="search" name="search" value="{{ filters.search }}" placeholder="Search description or category"></div>
+        <select name="category" class="form-select"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {% if filters.category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select>
+        <select name="type" class="form-select"><option value="">All types</option><option value="income" {% if filters.type == 'income' %}selected{% endif %}>Income</option><option value="expense" {% if filters.type == 'expense' %}selected{% endif %}>Expense</option></select>
+        <input type="date" name="date" value="{{ filters.date }}" class="form-control" title="Exact date">
+        <input type="date" name="date_from" value="{{ filters.date_from }}" class="form-control" title="Start date">
+        <input type="date" name="date_to" value="{{ filters.date_to }}" class="form-control" title="End date">
+        <button class="btn btn-dark" type="submit">Filter</button><a class="btn btn-light" href="{{ url_for('transactions') }}">Reset</a>
+    </form>
+    {% if transactions %}
+    <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Date</th><th>Type</th><th>Category / Source</th><th>Description</th><th class="text-end">Amount</th><th class="text-end">Actions</th></tr></thead><tbody>
+    {% for item in transactions %}<tr><td class="date-cell">{{ item['date'] }}</td><td><span class="type-pill {{ item['type'] }}">{{ item['type']|capitalize }}</span></td><td><strong>{{ item['category'] }}</strong></td><td class="description-cell">{{ item['description'] or '—' }}</td><td class="text-end amount-cell {{ item['type'] }}">{{ '+' if item['type'] == 'income' else '-' }}₹{{ "%.2f"|format(item['amount']) }}</td><td class="text-end"><a href="{{ url_for('edit_transaction', transaction_id=item['id']) }}" class="icon-button" title="Edit"><i class="bi bi-pencil"></i></a><form method="post" action="{{ url_for('remove_transaction', transaction_id=item['id']) }}" class="d-inline" onsubmit="return confirm('Delete this transaction?');"><button class="icon-button danger" title="Delete"><i class="bi bi-trash3"></i></button></form></td></tr>{% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state"><i class="bi bi-search"></i><p>No matching transactions.</p><a href="{{ url_for('add_expense') }}">Add a new expense</a></div>{% endif %}
+</section>
+{% endblock %}

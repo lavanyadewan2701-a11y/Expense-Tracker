@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | Personal Expense Tracker{% endblock %}
+{% block page_heading %}Your money, at a glance{% endblock %}
+{% block content %}
+<section class="hero-strip">
+    <div><span class="hero-kicker">OVERVIEW</span><h2>Make every rupee count.</h2><p>Keep your income and spending clear, current, and under control.</p></div>
+    <i class="bi bi-bar-chart-line-fill hero-icon"></i>
+</section>
+<div class="stat-grid">
+    <div class="stat-card income"><div class="stat-icon"><i class="bi bi-arrow-up-right"></i></div><span>Total income</span><strong>₹{{ "%.2f"|format(totals["income"]) }}</strong><small>All recorded income</small></div>
+    <div class="stat-card expense"><div class="stat-icon"><i class="bi bi-arrow-down-right"></i></div><span>Total expenses</span><strong>₹{{ "%.2f"|format(totals["expenses"]) }}</strong><small>All recorded spending</small></div>
+    <div class="stat-card balance"><div class="stat-icon"><i class="bi bi-wallet2"></i></div><span>Current balance</span><strong>₹{{ "%.2f"|format(totals["income"] - totals["expenses"]) }}</strong><small>Income minus expenses</small></div>
+    <div class="stat-card count"><div class="stat-icon"><i class="bi bi-hash"></i></div><span>Transactions</span><strong>{{ totals["transaction_count"] }}</strong><small>Entries in your ledger</small></div>
+</div>
+<div class="content-grid">
+    <section class="panel chart-panel"><div class="panel-heading"><div><span class="section-kicker">SPENDING BREAKDOWN</span><h3>Where your money goes</h3></div><a href="{{ url_for('analysis') }}" class="text-link">Full analysis <i class="bi bi-arrow-up-right"></i></a></div><div class="chart-wrap"><canvas id="categoryChart"></canvas>{% if not categories %}<p class="empty-chart">Add an expense to see your breakdown.</p>{% endif %}</div></section>
+    <section class="panel"><div class="panel-heading"><div><span class="section-kicker">RECENT ACTIVITY</span><h3>Latest transactions</h3></div><a href="{{ url_for('transactions') }}" class="text-link">View all <i class="bi bi-arrow-up-right"></i></a></div>
+        {% if recent %}<div class="activity-list">{% for item in recent %}<div class="activity-row"><span class="activity-icon {{ item['type'] }}"><i class="bi bi-{{ 'arrow-up-right' if item['type'] == 'income' else 'arrow-down-right' }}"></i></span><div class="activity-main"><strong>{{ item['category'] }}</strong><small>{{ item['description'] or 'No description' }}</small></div><div class="activity-amount {{ item['type'] }}">{{ '+' if item['type'] == 'income' else '-' }}₹{{ "%.2f"|format(item['amount']) }}<small>{{ item['date'] }}</small></div></div>{% endfor %}</div>{% else %}<div class="empty-state"><i class="bi bi-journal-plus"></i><p>No transactions yet.</p><a href="{{ url_for('add_expense') }}">Add your first expense</a></div>{% endif %}
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script><script>
+const categoryLabels = {{ categories | map(attribute='category') | list | tojson }};
+const categoryValues = {{ categories | map(attribute='total') | list | tojson }};
+if (categoryLabels.length) new Chart(document.getElementById('categoryChart'), { type: 'doughnut', data: { labels: categoryLabels, datasets: [{ data: categoryValues, backgroundColor: ['#e96b4b','#f2b84b','#3d8b78','#4267a9','#8b6f9e','#d47e9b','#6d8790','#b59b6a'], borderWidth: 0 }] }, options: { cutout: '68%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 16, font: { family: 'DM Sans' } } } } } });
+</script>{% endblock %}
